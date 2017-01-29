@@ -21,7 +21,7 @@
 
 
 // --------------------------------------------------------
-void avg3_reg_vf32matrix(vfloat32** vX, int n, vfloat32 **Y)
+void avg3_reg_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
 // --------------------------------------------------------
 {
     int i, j;
@@ -33,28 +33,19 @@ void avg3_reg_vf32matrix(vfloat32** vX, int n, vfloat32 **Y)
     vfloat32 aa1, cc1;
     vfloat32 aa2, cc2;
 
-    for(i=0; i<n; i++)
-        for(j = 0; j<n; j++) {
-            a0 = _mm_load_ps((float32*) &vX[i][j]);
-            b0 = _mm_load_ps((float32*) &vX[i][j+1]);
-            DEBUG(display_vfloat32(a0, "%4.0f", "a0  =")); DEBUG(puts(""));
-            DEBUG(display_vfloat32(b0, "%4.0f", "b0  =")); DEBUG(puts(""));
-            DEBUG(display_vfloat32(vec_left3(a0,b0), "%4.0f", "ab  =")); DEBUG(puts(""));
-        }
+    for(i=0; i<n*4; i++)
+        for(j=0; j<n; j++) {
+            a0 = _mm_load_ps((float32*) &vX[i-1][j-1]);
+            b0 = _mm_load_ps((float32*) &vX[i-1][j]);
+            c0 = _mm_load_ps((float32*) &vX[i-1][j+1]);
 
-    for(i=-2; i<10; i++)
-        for(j=-1; j<n+1; j++) {
-            a0 = _mm_load_ps((float32*) &vX[i][j]);
-            b0 = _mm_load_ps((float32*) &vX[i+1][j]);
-            c0 = _mm_load_ps((float32*) &vX[i+2][j]);
+            a1 = _mm_load_ps((float32*) &vX[i][j-1]);
+            b1 = _mm_load_ps((float32*) &vX[i][j]);
+            c1 = _mm_load_ps((float32*) &vX[i][j+1]);
 
-            a1 = _mm_load_ps((float32*) &vX[i][j+1]);
-            b1 = _mm_load_ps((float32*) &vX[i+1][j+1]);
-            c1 = _mm_load_ps((float32*) &vX[i+2][j+1]);
-
-            a2 = _mm_load_ps((float32*) &vX[i][j+2]);
-            b2 = _mm_load_ps((float32*) &vX[i+1][j+2]);
-            c2 = _mm_load_ps((float32*) &vX[i+2][j+2]);
+            a2 = _mm_load_ps((float32*) &vX[i+1][j-1]);
+            b2 = _mm_load_ps((float32*) &vX[i+1][j]);
+            c2 = _mm_load_ps((float32*) &vX[i+1][j+1]);
 
             /* DEBUG(display_vfloat32(a0, "%4.0f", "a0  =")); DEBUG(puts("")); */
             /* DEBUG(display_vfloat32(b0, "%4.0f", "b0  =")); DEBUG(puts("")); */
@@ -67,22 +58,19 @@ void avg3_reg_vf32matrix(vfloat32** vX, int n, vfloat32 **Y)
             /* DEBUG(display_vfloat32(a2, "%4.0f", "a2  =")); DEBUG(puts("")); */
             /* DEBUG(display_vfloat32(b2, "%4.0f", "b2  =")); DEBUG(puts("")); */
             /* DEBUG(display_vfloat32(c2, "%4.0f", "c2  =")); DEBUG(puts("")); */
+
+            aa0 = vec_left1(a0, b0);
+            cc0 = vec_right1(b0, c0);
+
+            aa1 = vec_left1(a1, b1);
+            cc1 = vec_right1(b1, c1);
+
+            aa2 = vec_left1(a2, b2);
+            cc2 = vec_right1(b2, c2);
+
+            vfloat32 y = vec_add3(vec_add3(aa0, b0, cc0), vec_add3(aa1, b1, cc1), vec_add3(aa2, b2, cc2) ) ;
+            _mm_store_ps((float*) &vY[i][j], vec_div3(vec_div3(y)));
         }
-    /*     y  = _mm_shuffle_ps(x0, x1, _MM_SHUFFLE(1, 0, 3, 2)); */
-    /*     xx0  = _mm_shuffle_ps(y, x1 , _MM_SHUFFLE(2, 1, 2, 1)); */
-    /*     DEBUG(display_vfloat32(xx0, "%4.0f", "xx0 =")); DEBUG(puts("")); */
-
-    /*     y  = _mm_shuffle_ps(x1, x2, _MM_SHUFFLE(1, 0, 3, 2)); */
-    /*     xx2  = _mm_shuffle_ps(x1, y , _MM_SHUFFLE(2, 1, 2, 1)); */
-    /*     DEBUG(display_vfloat32(xx2, "%4.0f", "xx2 =")); DEBUG(puts("")); */
-
-    /*     y = _mm_add_ps(xx0, xx2); */
-    /*     y = _mm_add_ps(y, x1); */
-    /*     y = _mm_div_ps(y, divider); */
-
-    /*     _mm_store_ps((float*) &vY[i+1], y); */
-    /* } */
-
     // CODE A COMPLETER
 }
 // --------------------------------------------------------
@@ -129,7 +117,7 @@ void avg5_reg_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
     // CODE A COMPLETER
 }
 // --------------------------------------------------------
-void avg5_rot_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
+void avg5_rot_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
 // --------------------------------------------------------
 {
     int i, j;
@@ -142,7 +130,7 @@ void avg5_rot_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
     // CODE A COMPLETER
 }
 // --------------------------------------------------------
-void avg5_red_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
+void avg5_red_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
 // --------------------------------------------------------
 {
     int i, j;
@@ -151,6 +139,71 @@ void avg5_red_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
     vfloat32 a2, b2, c2, d2, e2;
     vfloat32 a3, b3, c3, d3, e3;
     vfloat32 a4, b4, c4, d4, e4;
+
+    vfloat32 dd0, ee0;
+    vfloat32 dd1, ee1;
+    vfloat32 dd2, ee2;
+    vfloat32 dd3, ee3;
+    vfloat32 dd4, ee4;
+
+    for(i=0; i<n*4; i++)
+        for(j=0; j<n; j++) {
+            a0 = _mm_load_ps((float32*) &vX[i-2][j-1]);
+            b0 = _mm_load_ps((float32*) &vX[i-2][j]);
+            c0 = _mm_load_ps((float32*) &vX[i-2][j+1]);
+
+            a1 = _mm_load_ps((float32*) &vX[i-1][j-1]);
+            b1 = _mm_load_ps((float32*) &vX[i-1][j]);
+            c1 = _mm_load_ps((float32*) &vX[i-1][j+1]);
+
+            a2 = _mm_load_ps((float32*) &vX[i][j-1]);
+            b2 = _mm_load_ps((float32*) &vX[i][j]);
+            c2 = _mm_load_ps((float32*) &vX[i][j+1]);
+
+            a3 = _mm_load_ps((float32*) &vX[i+1][j-1]);
+            b3 = _mm_load_ps((float32*) &vX[i+1][j]);
+            c3 = _mm_load_ps((float32*) &vX[i+1][j+1]);
+
+            a4 = _mm_load_ps((float32*) &vX[i+2][j-1]);
+            b4 = _mm_load_ps((float32*) &vX[i+2][j]);
+            c4 = _mm_load_ps((float32*) &vX[i+2][j+1]);
+
+            /* Calculation */
+            d0 = vec_left1(a0, b0);
+            dd0 = vec_left2(a0, b0);
+            ee0 = vec_right2(b0, c0);
+            e0 = vec_right1(b0, c0);
+
+            d1 = vec_left1(a1, b1);
+            dd1 = vec_left2(a1, b1);
+            ee1 = vec_right2(b1, c1);
+            e1 = vec_right1(b1, c1);
+
+            d2 = vec_left1(a2, b2);
+            dd2 = vec_left2(a2, b2);
+            ee2 = vec_right2(b2, c2);
+            e2 = vec_right1(b2, c2);
+
+            d3 = vec_left1(a3, b3);
+            dd3 = vec_left2(a3, b3);
+            ee3 = vec_right2(b3, c3);
+            e3 = vec_right1(b3, c3);
+
+            d4 = vec_left1(a4, b4);
+            dd4 = vec_left2(a4, b4);
+            ee4 = vec_right2(b4, c4);
+            e4 = vec_right1(b4, c4);
+
+            vfloat32 y= vec_add5(
+                vec_add5(dd0, d0, b0, e0, ee0),
+                vec_add5(dd1, d1, b1, e1, ee1),
+                vec_add5(dd2, d2, b2, e2, ee2),
+                vec_add5(dd3, d3, b3, e3, ee3),
+                vec_add5(dd4, d4, b4, e4, ee4)
+                );
+
+            _mm_store_ps((float*) &vY[i][j], vec_div5(vec_div5(y)));
+        }
 
     // CODE A COMPLETER
 }
@@ -189,7 +242,7 @@ void test2D(int n)
     // ------------------------- //
     // -- calculs des indices -- //
     // ------------------------- //
-
+    // Important to change accoding to the matrix 3x3 5x5 !!!!!
     b = 2; // 1 for 3x3, 2 for 5x5
     card = card = card_vfloat32();
 
