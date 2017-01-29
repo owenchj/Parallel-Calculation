@@ -30,10 +30,6 @@ void add_vf32vector(vfloat32 *vX1, vfloat32 *vX2, int n, vfloat32 *vY)
 
         y = _mm_add_ps(x1, x2);
 
-        /* DEBUG(display_vfloat32(x1, "%4.0f", "x1 =")); DEBUG(puts("")); */
-        /* DEBUG(display_vfloat32(x2, "%4.0f", "x2 =")); DEBUG(puts("")); */
-        /* DEBUG(display_vfloat32(y,  "%4.0f", "y  =")); DEBUG(puts("")); */
-
         _mm_store_ps((float*) &vY[i], y);
     }
 }
@@ -47,9 +43,6 @@ vfloat32 dot_vf32vector(vfloat32 *vX1, vfloat32 *vX2, int n)
     for(i=0; i<n; i++) {
         x1 = _mm_load_ps((float32*) &vX1[i]);
         x2 = _mm_load_ps((float32*) &vX2[i]);
-
-        /* DEBUG(display_vfloat32(x1, "%4.0f", "x1 =")); DEBUG(puts("")); */
-        /* DEBUG(display_vfloat32(x2, "%4.0f", "x2 =")); DEBUG(puts("")); */
 
         p   = _mm_mul_ps(x1, x2);
         s0  = _mm_shuffle_ps(p , p , _MM_SHUFFLE(2, 3, 0, 1));
@@ -76,10 +69,8 @@ void avg3_vf32vector(vfloat32 *vX, int n, vfloat32 *vY)
         x1 = _mm_load_ps((float32*) &vX[i+1]);
         x2 = _mm_load_ps((float32*) &vX[i+2]);
 
-        // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
-        xx0 = vec_left1(x0, x1);
-        // vec_left1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
-        xx2 = vec_right1(x1, x2);
+        xx0 = _mm_set_ps(x1[2],x1[1],x1[0],x0[3]);
+        xx2 = _mm_set_ps(x2[0],x1[3],x1[2],x1[1]);
 
         _mm_store_ps((float*) &vY[i+1], vec_div3(vec_add3(xx0, x1, xx2)));
     }
@@ -101,15 +92,15 @@ void avg5_vf32vector(vfloat32 *vX, int n, vfloat32 *vY)
         x2 = _mm_load_ps((float32*) &vX[i+1]);
         x3 = _mm_load_ps((float32*) &vX[i+2]);
 
-        /* DEBUG(display_vfloat32(x1, "%4.0f", "x1  =")); DEBUG(puts("")); */
-        /* DEBUG(display_vfloat32(x2, "%4.0f", "x2  =")); DEBUG(puts("")); */
-        /* DEBUG(display_vfloat32(x3, "%4.0f", "x3  =")); DEBUG(puts("")); */
-
-        xx0 = vec_left2(x1, x2);
-        xx1 = vec_left1(x1, x2);
+        // vec_left2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+        xx0 = _mm_set_ps(x2[1],x2[0],x1[3],x1[2]);
+        // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
+        xx1 = _mm_set_ps(x2[2],x2[1],x2[0],x1[3]);
         // X2
-        xx3 = vec_right1(x2, x3);
-        xx4 = vec_right2(x2, x3);
+        // vec_right1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
+        xx3 = _mm_set_ps(x3[0],x2[3],x2[2],x2[1]);
+        // vec_right2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+        xx4 = _mm_set_ps(x3[1],x3[0],x2[3],x2[2]);
 
         _mm_store_ps((float*) &vY[i+1], vec_div5(vec_add5(xx0, xx1, x2, xx3, xx4)));
     }
@@ -120,53 +111,39 @@ void avg5_vf32vector(vfloat32 *vX, int n, vfloat32 *vY)
 void avg3_rot_vf32vector(vfloat32 *vX, int n, vfloat32 *vY)
 // --------------------------------------------------------
 {
-    int i, m, k;
+    int i;
     vfloat32 x0, x1, x2; // registres alignes
     vfloat32 xx0, xx2; // registres non alignes
 
     for(i=-1; i<n-1; i++) {
 
-        if(i < 0)
-            m = n + i;
-        else
-            m = i;
-
-        x0 = _mm_load_ps((float32*) &vX[m % n]);
-        x1 = _mm_load_ps((float32*) &vX[(i+1) % n]);
-        x2 = _mm_load_ps((float32*) &vX[(i+2) % n]);
+        x0 = _mm_load_ps((float32*) &vX[i]);
+        x1 = _mm_load_ps((float32*) &vX[i+1]);
+        x2 = _mm_load_ps((float32*) &vX[i+2]);
 
         // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
         xx0 = vec_left1(x0, x1);
-        // vec_left1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
+        // vec_right1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
         xx2 = vec_right1(x1, x2);
 
         _mm_store_ps((float*) &vY[i+1], vec_div3(vec_add3(xx0, x1, xx2)));
     }
-
     // CODE A COMPLETER EN SSE1
 }
 // --------------------------------------------------------
 void avg5_rot_vf32vector(vfloat32 *vX, int n, vfloat32 *vY)
 // --------------------------------------------------------
 {
-    int i, m;
+    int i;
     vfloat32 x1, x2, x3; // registres alignes
     vfloat32 xx0, xx1, xx3, xx4; // registres non alignes
 
+
     for(i=-1; i<n-1; i++) {
 
-        if(i < 0)
-            m = n + i;
-        else
-            m = i;
-
-        x1 = _mm_load_ps((float32*) &vX[m % n]);
-        x2 = _mm_load_ps((float32*) &vX[(i+1) % n]);
-        x3 = _mm_load_ps((float32*) &vX[(i+2) % n]);
-
-        /* DEBUG(display_vfloat32(x1, "%4.0f", "x1  =")); DEBUG(puts("")); */
-        /* DEBUG(display_vfloat32(x2, "%4.0f", "x2  =")); DEBUG(puts("")); */
-        /* DEBUG(display_vfloat32(x3, "%4.0f", "x3  =")); DEBUG(puts("")); */
+        x1 = _mm_load_ps((float32*) &vX[i]);
+        x2 = _mm_load_ps((float32*) &vX[i+1]);
+        x3 = _mm_load_ps((float32*) &vX[i+2]);
 
         xx0 = vec_left2(x1, x2);
         xx1 = vec_left1(x1, x2);

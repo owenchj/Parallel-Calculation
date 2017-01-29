@@ -47,17 +47,46 @@ void avg3_reg_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
             b2 = _mm_load_ps((float32*) &vX[i+1][j]);
             c2 = _mm_load_ps((float32*) &vX[i+1][j+1]);
 
-            /* DEBUG(display_vfloat32(a0, "%4.0f", "a0  =")); DEBUG(puts("")); */
-            /* DEBUG(display_vfloat32(b0, "%4.0f", "b0  =")); DEBUG(puts("")); */
-            /* DEBUG(display_vfloat32(c0, "%4.0f", "c0  =")); DEBUG(puts("")); */
+            aa0 = _mm_set_ps(b0[2],b0[1],b0[0],a0[3]);
+            cc0 = _mm_set_ps(c0[0],b0[3],b0[2],b0[1]);
 
-            /* DEBUG(display_vfloat32(a1, "%4.0f", "a1  =")); DEBUG(puts("")); */
-            /* DEBUG(display_vfloat32(b1, "%4.0f", "b1  =")); DEBUG(puts("")); */
-            /* DEBUG(display_vfloat32(c1, "%4.0f", "c1  =")); DEBUG(puts("")); */
+            aa1 = _mm_set_ps(b1[2],b1[1],b1[0],a1[3]);
+            cc1 = _mm_set_ps(c1[0],b1[3],b1[2],b1[1]);
 
-            /* DEBUG(display_vfloat32(a2, "%4.0f", "a2  =")); DEBUG(puts("")); */
-            /* DEBUG(display_vfloat32(b2, "%4.0f", "b2  =")); DEBUG(puts("")); */
-            /* DEBUG(display_vfloat32(c2, "%4.0f", "c2  =")); DEBUG(puts("")); */
+            aa2 = _mm_set_ps(b2[2],b2[1],b2[0],a2[3]);
+            cc2 = _mm_set_ps(c2[0],b2[3],b2[2],b2[1]);
+
+            vfloat32 y = vec_add3(vec_add3(aa0, b0, cc0), vec_add3(aa1, b1, cc1), vec_add3(aa2, b2, cc2) ) ;
+            _mm_store_ps((float*) &vY[i][j], vec_div3(vec_div3(y)));
+        }
+    // CODE A COMPLETER
+}
+// --------------------------------------------------------
+void avg3_rot_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
+// --------------------------------------------------------
+{
+    int i, j;
+    vfloat32 a0, b0, c0;
+    vfloat32 a1, b1, c1;
+    vfloat32 a2, b2, c2;
+
+    vfloat32 aa0, cc0;
+    vfloat32 aa1, cc1;
+    vfloat32 aa2, cc2;
+
+    for(i=0; i<n*4; i++)
+        for(j=0; j<n; j++) {
+            a0 = _mm_load_ps((float32*) &vX[i-1][j-1]);
+            b0 = _mm_load_ps((float32*) &vX[i-1][j]);
+            c0 = _mm_load_ps((float32*) &vX[i-1][j+1]);
+
+            a1 = _mm_load_ps((float32*) &vX[i][j-1]);
+            b1 = _mm_load_ps((float32*) &vX[i][j]);
+            c1 = _mm_load_ps((float32*) &vX[i][j+1]);
+
+            a2 = _mm_load_ps((float32*) &vX[i+1][j-1]);
+            b2 = _mm_load_ps((float32*) &vX[i+1][j]);
+            c2 = _mm_load_ps((float32*) &vX[i+1][j+1]);
 
             aa0 = vec_left1(a0, b0);
             cc0 = vec_right1(b0, c0);
@@ -71,20 +100,6 @@ void avg3_reg_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
             vfloat32 y = vec_add3(vec_add3(aa0, b0, cc0), vec_add3(aa1, b1, cc1), vec_add3(aa2, b2, cc2) ) ;
             _mm_store_ps((float*) &vY[i][j], vec_div3(vec_div3(y)));
         }
-    // CODE A COMPLETER
-}
-// --------------------------------------------------------
-void avg3_rot_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
-// --------------------------------------------------------
-{
-    int i, j;
-    vfloat32 a0, b0, c0;
-    vfloat32 a1, b1, c1;
-    vfloat32 a2, b2, c2;
-
-    vfloat32 aa0, cc0;
-    vfloat32 aa1, cc1;
-    vfloat32 aa2, cc2;
 
     // CODE A COMPLETER
 }
@@ -104,7 +119,7 @@ void avg3_red_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
     // CODE A COMPLETER
 }
 // --------------------------------------------------------
-void avg5_reg_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
+void avg5_reg_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
 // --------------------------------------------------------
 {
     int i, j;
@@ -113,24 +128,97 @@ void avg5_reg_vf32matrix(vfloat32** X, int n, vfloat32 **Y)
     vfloat32 a2, b2, c2, d2, e2;
     vfloat32 a3, b3, c3, d3, e3;
     vfloat32 a4, b4, c4, d4, e4;
+
+    vfloat32 dd0, ee0;
+    vfloat32 dd1, ee1;
+    vfloat32 dd2, ee2;
+    vfloat32 dd3, ee3;
+    vfloat32 dd4, ee4;
+
+    for(i=0; i<n*4; i++)
+        for(j=0; j<n; j++) {
+            a0 = _mm_load_ps((float32*) &vX[i-2][j-1]);
+            b0 = _mm_load_ps((float32*) &vX[i-2][j]);
+            c0 = _mm_load_ps((float32*) &vX[i-2][j+1]);
+
+            a1 = _mm_load_ps((float32*) &vX[i-1][j-1]);
+            b1 = _mm_load_ps((float32*) &vX[i-1][j]);
+            c1 = _mm_load_ps((float32*) &vX[i-1][j+1]);
+
+            a2 = _mm_load_ps((float32*) &vX[i][j-1]);
+            b2 = _mm_load_ps((float32*) &vX[i][j]);
+            c2 = _mm_load_ps((float32*) &vX[i][j+1]);
+
+            a3 = _mm_load_ps((float32*) &vX[i+1][j-1]);
+            b3 = _mm_load_ps((float32*) &vX[i+1][j]);
+            c3 = _mm_load_ps((float32*) &vX[i+1][j+1]);
+
+            a4 = _mm_load_ps((float32*) &vX[i+2][j-1]);
+            b4 = _mm_load_ps((float32*) &vX[i+2][j]);
+            c4 = _mm_load_ps((float32*) &vX[i+2][j+1]);
+
+            /* Calculation */
+
+            // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
+            d0 = _mm_set_ps(b0[2],b0[1],b0[0],a0[3]);
+            // vec_left2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            dd0 = _mm_set_ps(b0[1],b0[0],a0[3],a0[2]);
+            // vec_right2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            ee0 = _mm_set_ps(c0[1],c0[0],b0[3],b0[2]);
+            // vec_right1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
+            e0 = _mm_set_ps(c0[0],b0[3],b0[2],b0[1]);
+
+            // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
+            d1 = _mm_set_ps(b1[2],b1[1],b1[0],a1[3]);
+            // vec_left2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            dd1 = _mm_set_ps(b1[1],b1[0],a1[3],a1[2]);
+            // vec_right2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            ee1 = _mm_set_ps(c1[1],c1[0],b1[3],b1[2]);
+            // vec_right1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
+            e1 = _mm_set_ps(c1[0],b1[3],b1[2],b1[1]);
+
+            // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
+            d2 = _mm_set_ps(b2[2],b2[1],b2[0],a2[3]);
+            // vec_left2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            dd2 = _mm_set_ps(b2[1],b2[0],a2[3],a2[2]);
+            // vec_right2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            ee2 = _mm_set_ps(c2[1],c2[0],b2[3],b2[2]);
+            // vec_right1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
+            e2 = _mm_set_ps(c2[0],b2[3],b2[2],b2[1]);
+
+            // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
+            d3 = _mm_set_ps(b3[2],b3[1],b3[0],a3[3]);
+            // vec_left2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            dd3 = _mm_set_ps(b3[1],b3[0],a3[3],a3[2]);
+            // vec_right2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            ee3 = _mm_set_ps(c3[1],c3[0],b3[3],b3[2]);
+            // vec_right1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
+            e3 = _mm_set_ps(c3[0],b3[3],b3[2],b3[1]);
+
+            // vec_left1(1 2 3 4 | 5 6 7 8) => 4 5 6 7
+            d4 = _mm_set_ps(b4[2],b4[1],b4[0],a4[3]);
+            // vec_left2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            dd4 = _mm_set_ps(b4[1],b4[0],a4[3],a4[2]);
+            // vec_right2(1 2 3 4 | 5 6 7 8) => 3 4 5 6
+            ee4 = _mm_set_ps(c4[1],c4[0],b4[3],b4[2]);
+            // vec_right1(1 2 3 4 | 5 6 7 8) => 2 3 4 5
+            e4 = _mm_set_ps(c4[0],b4[3],b4[2],b4[1]);
+
+            vfloat32 y= vec_add5(
+                vec_add5(dd0, d0, b0, e0, ee0),
+                vec_add5(dd1, d1, b1, e1, ee1),
+                vec_add5(dd2, d2, b2, e2, ee2),
+                vec_add5(dd3, d3, b3, e3, ee3),
+                vec_add5(dd4, d4, b4, e4, ee4)
+                );
+
+            _mm_store_ps((float*) &vY[i][j], vec_div5(vec_div5(y)));
+        }
 
     // CODE A COMPLETER
 }
 // --------------------------------------------------------
 void avg5_rot_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
-// --------------------------------------------------------
-{
-    int i, j;
-    vfloat32 a0, b0, c0, d0, e0;
-    vfloat32 a1, b1, c1, d1, e1;
-    vfloat32 a2, b2, c2, d2, e2;
-    vfloat32 a3, b3, c3, d3, e3;
-    vfloat32 a4, b4, c4, d4, e4;
-
-    // CODE A COMPLETER
-}
-// --------------------------------------------------------
-void avg5_red_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
 // --------------------------------------------------------
 {
     int i, j;
@@ -207,6 +295,19 @@ void avg5_red_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
 
     // CODE A COMPLETER
 }
+// --------------------------------------------------------
+void avg5_red_vf32matrix(vfloat32** vX, int n, vfloat32 **vY)
+// --------------------------------------------------------
+{
+    int i, j;
+    vfloat32 a0, b0, c0, d0, e0;
+    vfloat32 a1, b1, c1, d1, e1;
+    vfloat32 a2, b2, c2, d2, e2;
+    vfloat32 a3, b3, c3, d3, e3;
+    vfloat32 a4, b4, c4, d4, e4;
+
+    // CODE A COMPLETER
+}
 /* ============ */
 void test2D(int n)
 /* ============ */
@@ -263,17 +364,15 @@ void test2D(int n)
     vY3 = vf32matrix(vi0,  vi1,  vj0,  vj1);
     vY5 = vf32matrix(vi0,  vi1,  vj0,  vj1);
 
-    printf("= %d\n", vi0b);
-    printf("= %d\n", vi1b);
-    printf("= %d\n", vj0b);
-    printf("= %d\n", vj1b);
+    /* printf("= %d\n", vi0b); */
+    /* printf("= %d\n", vi1b); */
+    /* printf("= %d\n", vj0b); */
+    /* printf("= %d\n", vj1b); */
 
-    printf("= %d\n", vi0);
-    printf("= %d\n", vi1);
-    printf("= %d\n", vj0);
-    printf("= %d\n", vj1);
-
-
+    /* printf("= %d\n", vi0); */
+    /* printf("= %d\n", vi1); */
+    /* printf("= %d\n", vj0); */
+    /* printf("= %d\n", vj1); */
 
     // wrappers scalaires
     sX  = (float32**) vX;
