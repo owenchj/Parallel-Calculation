@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <ctype.h> /* isdigit */
 #include <string.h> /* memcpy */
 
@@ -25,6 +26,7 @@
 #include "simd_macro.h"
 #include "mymacro.h"
 
+uint64_t _rdtsc();
 //#define NB_THREADS 16
 
 long double pid = 3.1415926535897932384626433832795028841971693993751058;
@@ -267,7 +269,7 @@ void routine_arctan(int64 n)
     //printf("--- ArcTangente n = %8ld ---\n", n);
     //printf("--------------------\n");
     t0 = 0;
-    //    t0 = (double) _rdtsc();
+    t0 = (double) _rdtsc();
     a1 = arctan_1(n);
     t1 = 0;
     //t1 = (double) _rdtsc();
