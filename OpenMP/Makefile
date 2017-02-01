@@ -27,8 +27,8 @@ AR = ar -rc
 
 # -- Flags ----------
 C_DEBUG_FLAGS = -O0 -DDEBUG
-C_CC_FLAGS = -std=c99 -DNOALIAS -DALIGNED -DmySSE -DTIMER_POSIX6
-C_OPTIMISATION_FLAGS = -O3 -fstrict-aliasing -DOPENMP
+C_CC_FLAGS = -std=c99 -DNOALIAS -DALIGNED -DmySSE -DTIMER_POSIX6 -fopenmp
+C_OPTIMISATION_FLAGS = -O3 -fstrict-aliasing -DOPENMP 
 C_ARCH_FLAGS = -msse2 
 #-no-vec
 

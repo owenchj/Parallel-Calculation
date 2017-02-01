@@ -75,7 +75,7 @@ vuint32 mandelbrot_SIMD_F32(vfloat32 a, vfloat32 b, int max_iter)
 // --------------------------------------------------------------
 {
     // version avec test de sortie en float
-    vfloat32 x =a,y=b;
+    vfloat32 x = a, y = b;
     vuint32 iter = _mm_set1_epi32(0);
 
 
@@ -86,31 +86,24 @@ vuint32 mandelbrot_SIMD_F32(vfloat32 a, vfloat32 b, int max_iter)
         /* DEBUG(display_vfloat32(x, "%8.4f", "x =")); DEBUG(puts("")); */
         /* DEBUG(display_vfloat32(y, "%8.4f", "y =")); DEBUG(puts("")); */
 
-
         vfloat32 mask = _mm_and_ps((vfloat32)(_mm_cmplt_epi32(iter,_mm_set1_epi32(max_iter))),(_mm_cmplt_ps(len,_mm_set1_ps(4.f))));
         if(_mm_movemask_ps(mask)==0)break;
 
-        vfloat32 x2 = _mm_sub_ps(_mm_mul_ps(x,x),_mm_mul_ps(y,y));// x2 = x*x -y*y;
-        vfloat32 xy = _mm_mul_ps(x,y);
+        vfloat32 xx =_mm_mul_ps(x,x);
+        vfloat32 yy =_mm_mul_ps(y,y);
+        vfloat32 xy =_mm_mul_ps(x,y);
+        vfloat32 x2 = _mm_sub_ps(xx, yy);// x2 = x*x -y*y;
         vfloat32 y2 = _mm_add_ps(xy, xy);// y2 =2*x*y;
 
         //Mask.i = _mm_srai_epi32( Mask.i, 31 );
         vfloat32 xn = _mm_add_ps(a,x2);
-        xn = _mm_and_ps(xn, mask );
-        x  = _mm_andnot_ps( mask, x );
-        x  = _mm_or_ps( x,  xn);
+        x  = _mm_or_ps(_mm_andnot_ps( mask, x ),  _mm_and_ps(xn, mask ));
 
         vfloat32 yn = _mm_add_ps(b,y2);
-        yn = _mm_and_ps(yn, mask);
-        y  = _mm_andnot_ps( mask, y );
-        y  = _mm_or_ps( y,  yn);
-
-
+        y  = _mm_or_ps(_mm_andnot_ps( mask, y ),  _mm_and_ps(yn, mask));
 
         vuint32 in = _mm_add_epi32(iter,_mm_set1_epi32(1));
-        vfloat32 inn = _mm_and_ps((vfloat32)in, mask);
-        iter  = (vuint32)_mm_andnot_ps( mask, (vfloat32)iter );
-        iter  = (vuint32)_mm_or_ps(inn,  (vfloat32)iter);
+        iter  = (vuint32)_mm_or_ps(_mm_and_ps((vfloat32)in, mask), (vfloat32)_mm_andnot_ps( mask, (vfloat32)iter ));
     }
     return iter;
     // COMPLETER ICI
@@ -166,7 +159,6 @@ void calc_mandelbrot_scalar(uint32 **M, int h, int w, float a0, float a1, float 
     // intervale de valeurs: [a0:a1]x[b0:b1]
 
     // la seule chose a modifier dans cette fonction est la ligne de pragma OpenMP
-
     int i, j;
 
     float da, db;
@@ -178,8 +170,8 @@ void calc_mandelbrot_scalar(uint32 **M, int h, int w, float a0, float a1, float 
 
 #ifdef OPENMP
     omp_set_num_threads(NB_THREADS);
-#pragma omp parrallel for private(a, b, iter)
-// COMPLETER ICI
+    #pragma omp parallel for schedule(static, 1)
+//collapse(2)
 #endif
 
     for(i=0; i<h; i++) {
@@ -192,7 +184,7 @@ void calc_mandelbrot_scalar(uint32 **M, int h, int w, float a0, float a1, float 
             iter = mandelbrot_scalar(a, b, max_iter);
 
             M[i][j] = iter;
-	}
+        }
     }
 }
 // -----------------------------------------------------------------------------------------------------------
@@ -211,7 +203,8 @@ void calc_mandelbrot_SIMD_F32(vuint32 **M, int h, int w, float a0, float a1, flo
 
 
 #ifdef OPENMP
-    // COMPLETER ICI
+    omp_set_num_threads(NB_THREADS);
+    #pragma omp parallel for schedule(dynamic, 1)
 #endif
 
     for(i=0; i<h; i++) {
@@ -366,7 +359,7 @@ int main_mandelbrot(int argc, char * argv[])
     test_mandelbrot_scalar();
     test_mandelbrot_SIMD();
 
-    n = 1000; max_iter = 256;
+    n = 1024; max_iter = 256;
     printf("n = %4d max_iter = %d\n", n, max_iter);
     bench_mandelbrot_scalar(n, max_iter);
     bench_mandelbrot_SIMD(n, max_iter);
