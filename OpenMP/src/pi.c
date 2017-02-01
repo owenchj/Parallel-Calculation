@@ -87,9 +87,18 @@ double arctan(double x, int64 n)
 /* ------------------------- */
 {
     double s = 0; // somme
+    int64 k = -1;
+    int64 m = 0;
+/* #ifdef OPENMP */
+/* #pragma omp parallel for  reduction(+:s) */
+/* #endif */
 
-    // COMPLETER ICI
-
+    for (int64 i = 0; i < n; i++)
+    {
+        k = k * -1;
+        m = 2 * i + 1;
+        s = s + (double)k * pow(x, m) / (double)m;
+    }
     return s;
 }
 /* ----------------- */
@@ -367,5 +376,6 @@ int main_pi (int argc, const char * argv[])
 
     main_arctan();
     main_integrale();
+
     return 0;
 }
