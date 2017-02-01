@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 // -----------------------------
 {
     info();
-    main_mandelbrot(argc, argv);
-    // main_pi(argc, argv);
+    // main_mandelbrot(argc, argv);
+    main_pi(argc, argv);
     return 0;   
 }

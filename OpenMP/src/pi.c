@@ -42,7 +42,7 @@ void display_math(void)
     printf("FLT_EPSILON  = %.40f\n", FLT_EPSILON);
     printf("DBL_EPSILON  = %.40f\n", DBL_EPSILON);
     printf("LDBL_EPSILON = %.40Lf\n", LDBL_EPSILON);
-    
+
     printf("max iter: %.10e\n", 1.0/sqrtf(FLT_EPSILON));
     printf("max iter: %.10e\n", 1.0/sqrt(DBL_EPSILON));
     printf("max iter: %.10Le\n", 1.0/sqrtl(LDBL_EPSILON));
@@ -52,10 +52,16 @@ void display_math(void)
 double integrale(int64 n)
 /* ------------------ */
 {
-	double pi = 0;
+    double pi = 0;
 
-    // COMPLETER ICI
-    
+#ifdef OPENMP
+#pragma omp parallel for  reduction(+:pi)
+#endif
+
+    for (int64 i = 0; i < n; i++)
+        pi = pi + (double)n / (double)(n*n + i*i);
+
+    pi = (double)4.0 * pi;
     return pi;
 }
 /* ---------------- */
@@ -63,9 +69,17 @@ double arctan1(int64 n)
 /* ---------------- */
 {
     double s = 0;
-    
-    // COMPLETER ICI
-    
+    int k = -1;
+
+#ifdef OPENMP
+#pragma omp parallel for  reduction(+:s)
+#endif
+
+    for (int64 i = 0; i < n; i++)
+    {
+        k = -1 * k;
+        s = s + (double)k / (double)(2 * i + 1);
+    }
     return s;
 }
 /* ------------------------- */
@@ -73,23 +87,23 @@ double arctan(double x, int64 n)
 /* ------------------------- */
 {
     double s = 0; // somme
-   
+
     // COMPLETER ICI
-    
+
     return s;
 }
 /* ----------------- */
 double arctan_1(int64 n)
 /* ----------------- */
-{    
+{
     // pi/4 = atan(1/1)
-    
+
     double a1;
     double pia;
-    
+
     a1 = arctan1(n);
     pia = 4.0 * a1;
-    
+
     VERBOSE(printf("%10s\n", "1"));
     VERBOSE(printf("%10s  %.40f\n", "approx", a1));
     VERBOSE(printf("%10s  %.40f\n", "atan", atan(a1)));
@@ -100,7 +114,7 @@ double arctan_1(int64 n)
     VERBOSE(printf("%10s  %.40f\n", "erreur", fabs(pia-pid)));
     VERBOSE(printf("%10s\n", "----------"));
     //printf("%10s  %s\n", "pi", str_pi);
-    
+
     return pia;
 }
 /* ------------------- */
@@ -108,15 +122,15 @@ double arctan_2_3(int64 n)
 /* ------------------- */
 {
     // pi/4 = 4.atan(1/2)+atan(1/3)
-    
+
     double a2, x2 = 1.0 / 2.0;
     double a3, x3 = 1.0 / 3.0;
     double pia;
-    
+
     a2 = arctan(x2, n);
     a3 = arctan(x3, n);
     pia = 4.0 * (a2 + a3);
-    
+
     VERBOSE(printf("%10s\n", "2 3"));
     VERBOSE(printf("%10s  %.40f\n", "approx", a2));
     VERBOSE(printf("%10s  %.40f\n", "atan", atan(x2)));
@@ -131,7 +145,7 @@ double arctan_2_3(int64 n)
     VERBOSE(printf("%10s  %.40f\n", "erreur", fabs(pia-pid)));
     VERBOSE(printf("%10s\n", "----------"));
     //printf("%10s  %s\n", "pi", str_pi);
-    
+
     return pia;
 }
 /* --------------------- */
@@ -139,17 +153,17 @@ double arctan_5_239(int64 n)
 /* --------------------- */
 {
     // pi/4 = 4.atan(1/5)+atan(1/239)
-    
+
     double a5, x5     = 1.0 / 5.0;
     double a239, x239 = 1.0 / 239.0;
     double pia;
     // atan(1/5)   = 0.19739555985
     // atan(1/239) = 0.00418410041841
-    
+
     a5   = arctan(x5,   n);
     a239 = arctan(x239, n);
     pia = 4.0 * (4.0 * a5 - a239);
-    
+
     VERBOSE(printf("%10s\n", "5 239"));
     VERBOSE(printf("%10s  %.40f\n", "approx", a5));
     VERBOSE(printf("%10s  %.40f\n", "atan", atan(x5)));
@@ -164,7 +178,7 @@ double arctan_5_239(int64 n)
     VERBOSE(printf("%10s  %.40f\n", "erreur", fabs(pia-pid)));
     VERBOSE(printf("%10s\n", "----------"));
     //printf("%10s  %s\n", "pi", str_pi);
-    
+
     return pia;
 }
 /* ----------- */
@@ -181,14 +195,14 @@ void disp(int64 n, char *str, double pia, double dt)
 // -------------------------------------------------
 {
     // affichage sous la forme
-    
+
     // n
     // nom de la fonction
     // valeur
     // erreur absolue
     // nombre de bits correct
     // nombre de cycle/iteration
-    
+
     char *f0 = "%.0f";
     char *f1 = "%.1f";
     char *f2 = "%.2f";
@@ -207,43 +221,43 @@ void disp(int64 n, char *str, double pia, double dt)
     char *f15 = "%.15f";
     char *f16 = "%.16f";
     char *f17 = "%.17f";
-    
+
     char *format;
-    
+
     double error;
     double digit;
     int idigit;
-    
+
     error = fabs(pia-pid);
     digit = -log(error)/log(10);
     idigit = (int) digit;
-    
+
     /*
-     printf("e = %f\n", e);
-     printf("d = %f\n", d);
-     printf("n = %d\n", n);
-     */
+      printf("e = %f\n", e);
+      printf("d = %f\n", d);
+      printf("n = %d\n", n);
+    */
     switch(idigit) {
-        case 0: format = f0; break;
-        case 1: format = f1; break;
-        case 2: format = f2; break;
-        case 3: format = f3; break;
-        case 4: format = f4; break;
-        case 5: format = f5; break;
-        case 6: format = f6; break;
-        case 7: format = f7; break;
-        case 8: format = f8; break;
-        case 9: format = f9; break;
-        case 10: format = f10; break;
-        case 11: format = f11; break;
-        case 12: format = f12; break;
-        case 13: format = f13; break;
-        case 14: format = f14; break;
-        case 15: format = f15; break;
-        case 16: format = f16; break;
-        case 17: format = f17; break;
+    case 0: format = f0; break;
+    case 1: format = f1; break;
+    case 2: format = f2; break;
+    case 3: format = f3; break;
+    case 4: format = f4; break;
+    case 5: format = f5; break;
+    case 6: format = f6; break;
+    case 7: format = f7; break;
+    case 8: format = f8; break;
+    case 9: format = f9; break;
+    case 10: format = f10; break;
+    case 11: format = f11; break;
+    case 12: format = f12; break;
+    case 13: format = f13; break;
+    case 14: format = f14; break;
+    case 15: format = f15; break;
+    case 16: format = f16; break;
+    case 17: format = f17; break;
     }
-    
+
     //printf("n = %12ld", n);
     printf("n = %10.3e", (double)n);
     printf("%10s  ", str);
@@ -252,7 +266,7 @@ void disp(int64 n, char *str, double pia, double dt)
     } else {
         printf(format, pia); space(20-idigit);
     }
-    
+
     printf(" %.5e %2d", error, idigit);
     printf(" %15.3f cycle/iteration\n", dt/(double)n);
 }
@@ -264,19 +278,17 @@ void routine_arctan(int64 n)
     double t0, t1, dt;
     //double a2;
     //double a5;
-    
+
     //printf("--------------------\n");
     //printf("--- ArcTangente n = %8ld ---\n", n);
     //printf("--------------------\n");
-    t0 = 0;
     t0 = (double) _rdtsc();
     a1 = arctan_1(n);
-    t1 = 0;
-    //t1 = (double) _rdtsc();
+    t1 = (double) _rdtsc();
     dt = t1-t0;
     //a2 = arctan_2_3(n);
     //a5 = arctan_5_239(n);
-    
+
     disp(n, "arctan 1",   a1, dt);
     //disp("atan 2 3", a2);
     //disp("atan 5 239", a5);
@@ -286,7 +298,7 @@ void main_arctan(void)
 /* ---------------- */
 {
     // exemples d'appels
-    
+
     //routine_arctan(1);
     //routine_arctan(2);
     //routine_arctan(5);
@@ -311,21 +323,19 @@ void routine_integrale(int64 n)
 {
     double i;
     double t0, t1, dt;
-        
-    t0 = 0;
-    //t0 = (double) _rdtsc();
+
+    t0 = (double) _rdtsc();
     i = integrale(n);
-    t1 = 0;
-    //t1 = (double) _rdtsc();
+    t1 = (double) _rdtsc();
     dt = t1-t0;
-    
+
     disp(n, "integrale", i, dt);
 }
 /* ------------------- */
 void main_integrale(void)
 /* ------------------- */
 {
-    
+
     // exemples d'appels
     routine_integrale(10);
     routine_integrale(100);
@@ -348,13 +358,13 @@ int main_pi (int argc, const char * argv[])
 {
     printf("sizeof(int) = %d\n",         (int) sizeof(int));
     printf("sizeof(long) = %d\n",        (int) sizeof(long));
-    
-    
+
+
     printf("sizeof(float) = %d\n",       (int) sizeof(float));
     printf("sizeof(double) = %d\n",      (int) sizeof(double));
     printf("sizeof(long double) = %d\n", (int) sizeof(long double));
     puts("");
-    
+
     main_arctan();
     main_integrale();
     return 0;
